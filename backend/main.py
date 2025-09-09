@@ -45,8 +45,8 @@ def ping():
 def products(limit: int = 5):
     return shopify_get('products.json', params={'limit': limit})
 
-@app.get('products_simple')
-def product_simple(limit: int = 10):
+@app.get('/products_simple')
+def products_simple(limit: int = 10):
     data = shopify_get(
         'products.json',
         params={
