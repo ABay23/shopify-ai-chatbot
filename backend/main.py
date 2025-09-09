@@ -45,6 +45,30 @@ def ping():
 def products(limit: int = 5):
     return shopify_get('products.json', params={'limit': limit})
 
+@app.get('products_simple')
+def product_simple(limit: int = 10):
+    data = shopify_get(
+        'products.json',
+        params={
+            'limit': limit,
+            #* Only fetch these fields from Shopify
+            'fields': 'id, title, images, variants'
+        },
+    )
+    
+    #* Shhape for the UI
+    products = []
+    for p in data.get('products', []):
+        price = p['variants'][0]['price'] if p.get('variants') else None
+        img = (p.get('images') or [{}])[0].get('src')
+        products.append({
+            'id': p['id'],
+            'title': p['title'],
+            'price': price,
+            'images': img,
+        })
+    return {"products": products}
+
 @app.get('/orders_count')
 def order_count():
     #* lighweight count demo
