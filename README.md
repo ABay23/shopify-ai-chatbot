@@ -20,7 +20,8 @@ A focused prototype that lets a merchant **ask natural-language questions** abou
 
 ## Screenshots
 
-_Add 2–3 small screenshots here of the chat UI answering real questions._
+_they will be
+added soon_
 
 ---
 
@@ -35,9 +36,6 @@ FastAPI (Python)
 |-- calls OpenAI (GPT model) with retrieved data
 v
 Natural-language answer → back to UI
-
-yaml
-Copy code
 
 ---
 
@@ -67,31 +65,31 @@ Copy code
 ```bash
 git clone https://github.com/ABay23/shopify-ai-chatbot.git
 cd shopify-ai-chatbot
+
 2) Environment variables
 Copy templates and fill in values (no secrets are committed):
 
 bash
-Copy code
+
 # Backend
 cp backend/.env.example backend/.env
 # Frontend
 cp frontend/.env.local.example frontend/.env.local
 backend/.env required
 
-ini
-Copy code
+
+env
 SHOPIFY_API_KEY=your_key
 SHOPIFY_API_SECRET=your_secret
 SHOPIFY_ACCESS_TOKEN=your_store_access_token
 OPENAI_API_KEY=your_openai_key
 frontend/.env.local required
 
-ini
-Copy code
+env
 NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+
 3) Run backend (FastAPI)
-bash
-Copy code
+
 cd backend
 python3 -m venv venv
 source venv/bin/activate
@@ -100,8 +98,7 @@ uvicorn main:app --reload --port 8000
 Test: http://localhost:8000/ping → { "message": "Backend is running!" }
 
 4) Run frontend (Next.js)
-bash
-Copy code
+
 cd ../frontend
 npm install
 npm run dev
