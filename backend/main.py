@@ -39,10 +39,10 @@ def shopify_get(path: str, params: dict | None = None):
         raise HTTPException(status_code=r.status_code, detail=r.text)
     return r.json()
 
-# def iso_utc_start_of_today() -> str:
-#     now = datetime.now(timezone.utc)
-#     start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
-#     return start.isoformat()
+def iso_utc_start_of_today() -> str:
+    now = datetime.now(timezone.utc)
+    start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+    return start.isoformat()
 
 def iso_utc_days_ago(days: int) -> str:
     return (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
