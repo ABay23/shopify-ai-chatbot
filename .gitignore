@@ -1,13 +1,28 @@
-# Python
-backend/venv/
-backend/__pycache__/
-backend/.env
-
-# Node.js
-frontend/node_modules/
-frontend/.next/
-frontend/.env.local
-
-# OS / Editor
+# ---- Global ----
 .DS_Store
 *.log
+.env
+.env.local
+.env.*.local
+
+# ---- Python / FastAPI (backend) ----
+backend/__pycache__/
+backend/*.pyc
+backend/venv/
+backend/.env
+backend/.pytest_cache/
+backend/.mypy_cache/
+
+# ---- Node / Next.js (frontend) ----
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.production.local
+frontend/.env.test.local
+
+# ---- Misc ----
+# Editor & IDE settings
+.vscode/
+.idea/
