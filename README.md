@@ -124,7 +124,7 @@ shopify-ai-chatbot/
 ## Roadmap (APM-friendly)
 
 - [x] Scaffold FE/BE + CORS + repo hygiene
-- [ ] Shopify Admin API integration (products, orders)
+- [x] Shopify Admin API integration (products, orders)
 - [ ] `/chat` endpoint: retrieve data → compose NL answer with OpenAI
 - [ ] Chat UI polish (typing indicator, error states)
 - [ ] Metrics: simple latency + success counter

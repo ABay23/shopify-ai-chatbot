@@ -1,7 +1,10 @@
-import type { NextConfig } from "next";
+// next.config.ts
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+	images: {
+		domains: ['cdn.shopify.com'], // allow Shopify CDN for <Image />
+	},
+}
 
-export default nextConfig;
+export default nextConfig

@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
+from collections import Counter
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from pathlib import Path
 import os, requests
@@ -37,6 +39,14 @@ def shopify_get(path: str, params: dict | None = None):
         raise HTTPException(status_code=r.status_code, detail=r.text)
     return r.json()
 
+def iso_utc_start_of_today() -> str:
+    now = datetime.now(timezone.utc)
+    start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+    return start.isoformat()
+
+def iso_utc_days_ago(days: int) -> str:
+    return (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+
 @app.get("/ping")
 def ping():
     return {"message": "Backend is running!!!"}
@@ -44,6 +54,37 @@ def ping():
 @app.get('/products')
 def products(limit: int = 5):
     return shopify_get('products.json', params={'limit': limit})
+
+@app.get("/top_selling_30d")
+def top_selling_30d(n: int = 1):
+    params = {
+        "status": "any",
+        "created_at_min": iso_utc_days_ago(30),
+        "fields": "id,created_at,line_items",
+        "limit": 250,  # fine for a dev store; paging optional
+    }
+    data = shopify_get("orders.json", params=params)
+    orders = data.get("orders", [])
+    counts = Counter()
+    for o in orders:
+        for li in (o.get("line_items") or []):
+            counts[li.get("title", "Unknown")] += int(li.get("quantity") or 0)
+    top = [{"title": t, "units": u} for t, u in counts.most_common(n)]
+    return {"top": top}
+
+@app.get("/orders_today")
+def orders_today():
+    params = {
+        "status": "any",
+        "created_at_min": iso_utc_start_of_today(),
+        "fields": "id,total_price,created_at",
+        "limit": 250,
+    }
+    data = shopify_get("orders.json", params=params)
+    orders = data.get("orders", [])
+    count = len(orders)
+    revenue = sum(float(o.get("total_price") or 0) for o in orders)
+    return {"count": count, "revenue": revenue}
 
 @app.get('/products_simple')
 def products_simple(limit: int = 10):
@@ -60,7 +101,13 @@ def products_simple(limit: int = 10):
     products = []
     for p in data.get('products', []):
         price = p['variants'][0]['price'] if p.get('variants') else None
-        img = (p.get('images') or [{}])[0].get('src')
+        # img = (p.get('images') or [{}])[0].get('src')
+        img = None
+        if p.get("image") and p["image"].get("src"):
+            img = p["image"]["src"]
+        elif (p.get("images") or [{}])[0].get("src"):
+            img = p["images"][0]["src"]
+            
         products.append({
             'id': p['id'],
             'title': p['title'],

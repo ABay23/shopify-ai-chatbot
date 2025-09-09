@@ -13,7 +13,7 @@ type ProductsResponse = {
 	products: Product[]
 }
 
-async function getProducts(limit = 8): Promise<ProductsResponse> {
+async function getProducts(limit = 9): Promise<ProductsResponse> {
 	const base = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000'
 	const res = await fetch(`${base}/products_simple?limit=${limit}`, {
 		cache: 'no-store',
@@ -26,7 +26,7 @@ async function getProducts(limit = 8): Promise<ProductsResponse> {
 }
 
 export default async function HomePage() {
-	const { products } = await getProducts(8)
+	const { products } = await getProducts(12)
 
 	return (
 		<main className='p-6'>
