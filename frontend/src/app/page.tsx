@@ -8,7 +8,7 @@ type Product = {
 	price?: string //* validate return from backend API first
 	image?: string
 }
-
+.
 type ProductsResponse = {
 	products: Product[]
 }

@@ -18,6 +18,25 @@ function getErrorMessage(err: unknown): string {
 	}
 }
 
+// app/page.tsx – add this near the products list
+async function getOrdersToday() {
+	const base =
+		process.env.BACKEND_URL ??
+		process.env.NEXT_PUBLIC_BACKEND_URL ??
+		'http://127.0.0.1:8000'
+	const res = await fetch(`${base}/orders_today`, { cache: 'no-store' })
+	if (!res.ok) return { count: 0, revenue: 0 }
+	return res.json() as Promise<{ count: number; revenue: number }>
+}
+
+export default async function HomePage() {
+	const [{ products }, kpi] = await Promise.all([
+		getProducts(8),
+		getOrdersToday(),
+	])
+	// render two small cards for Orders Today / Revenue Today if you want
+}
+
 export default function ChatBox() {
 	const [msgs, setMsgs] = useState<Msg[]>([])
 	const [input, setInput] = useState<string>('')
