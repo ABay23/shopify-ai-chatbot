@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 from collections import Counter
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone, timedelta
@@ -10,6 +11,9 @@ import os, requests
 ENV_PATH = Path(__file__).parent / ".env"
 load_dotenv(dotenv_path=ENV_PATH)
 app = FastAPI()
+
+class ChatIn(BaseModel):
+    question: str
 
 '''
 We can allow requests from the Frontend dev server
@@ -130,3 +134,23 @@ def debug():
         "SHOPIFY_ACCESS_TOKEN_set": bool(tok),
         "ENV_PATH": str(ENV_PATH)
     }
+    
+'''
+THis is the chat concept
+'''
+@app.post('/chat')
+def _chat(body: ChatIn):
+    q =body.question.lower()
+    
+    if "top" in q and "sell" in q:
+        data = top_selling_30d(n=1)  # call the function directly
+        if data["top"]:
+            t = data["top"][0]
+            return {"answer": f"Top-selling (last 30d): {t['title']} with {t['units']} units."}
+        return {"answer": "No sales data in the last 30 days."}
+
+    if ("orders" in q and "today" in q) or ("sales" in q and "today" in q):
+        data = orders_today()
+        return {"answer": f"Orders today: {data['count']}. Revenue: ${data['revenue']:.2f}."}
+
+    return {"answer": "Try asking: 'Top-selling product?' or 'Orders today?'"}
