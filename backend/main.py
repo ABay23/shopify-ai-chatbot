@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from openai import OpenAI
 from collections import Counter
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone, timedelta
@@ -12,9 +13,6 @@ ENV_PATH = Path(__file__).parent / ".env"
 load_dotenv(dotenv_path=ENV_PATH)
 app = FastAPI()
 
-class ChatIn(BaseModel):
-    question: str
-
 '''
 We can allow requests from the Frontend dev server
 '''
@@ -26,8 +24,14 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
+#* Shopify ENVs
 STORE_DOMAIN = os.getenv("SHOPIFY_STORE_DOMAIN")
 ACCESS_TOKEN = os.getenv("SHOPIFY_ACCESS_TOKEN")
+
+#* OpenAI ENVs
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+oai = OpenAI(api_key=OPENAI_API_KEY)
+
 
 def shopify_get(path: str, params: dict | None = None):
     if not STORE_DOMAIN or not ACCESS_TOKEN:
@@ -51,6 +55,52 @@ def iso_utc_start_of_today() -> str:
 def iso_utc_days_ago(days: int) -> str:
     return (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
 
+'''
+Chatbot methods 
+'''
+
+class ChatIn(BaseModel):
+    question: str
+
+def classify_intent(q: str) -> str:
+    q = q.lower()
+    if ("top" in q and "sell" in q) or ("best" in q and "product" in q):
+        return "top_selling"
+    if "orders" in q and ("today" in q or "todays" in q or "today's" in q):
+        return "orders_today"
+    if "revenue" in q and "today" in q:
+        return "orders_today"  # same endpoint returns revenue
+    return "unknown"
+
+def phrase_answer(question: str, facts: dict) -> str:
+    """
+    Use OpenAI to turn raw facts into a concise, helpful answer.
+    """
+    #* Fast performance with lighweight model
+    resp = oai.chat.completions.create(
+        model="gpt-4o-mini",
+        temperature=0.2,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a concise Shopify assistant. "
+                    "Use ONLY the provided facts. Include numbers and time ranges. "
+                    "If data is empty, be clear about that."
+                ),
+            },
+            {
+                "role": "user",
+                "content": f"Question: {question}\nFacts (JSON): {facts}",
+            },
+        ],
+    )
+    return (resp.choices[0].message.content or "").strip()
+
+
+'''
+Endpoints with KPIs
+'''
 @app.get("/ping")
 def ping():
     return {"message": "Backend is running!!!"}
@@ -138,19 +188,29 @@ def debug():
 '''
 THis is the chat concept
 '''
-@app.post('/chat')
-def _chat(body: ChatIn):
-    q =body.question.lower()
-    
-    if "top" in q and "sell" in q:
-        data = top_selling_30d(n=1)  # call the function directly
-        if data["top"]:
-            t = data["top"][0]
-            return {"answer": f"Top-selling (last 30d): {t['title']} with {t['units']} units."}
-        return {"answer": "No sales data in the last 30 days."}
+@app.post("/chat")
+def chat(body: ChatIn):
+    q = body.question.strip()
+    if not q:
+        return {"answer": "Ask me something like: 'Orders today?' or 'Top-selling product'."}
 
-    if ("orders" in q and "today" in q) or ("sales" in q and "today" in q):
-        data = orders_today()
-        return {"answer": f"Orders today: {data['count']}. Revenue: ${data['revenue']:.2f}."}
+    intent = classify_intent(q)
 
-    return {"answer": "Try asking: 'Top-selling product?' or 'Orders today?'"}
+    try:
+        if intent == "orders_today":
+            data = orders_today()  # call the function directly (fast)
+            facts = {"orders_today": data}
+            return {"answer": phrase_answer(q, facts)}
+
+        if intent == "top_selling":
+            data = top_selling_30d(n=1)
+            facts = {"top_selling_30d": data}
+            return {"answer": phrase_answer(q, facts)}
+
+        # fallback: help the user with examples
+        facts = {"notice": "No matching intent", "examples": ["Orders today?", "Top-selling product?"]}
+        return {"answer": phrase_answer(q, facts)}
+
+    except Exception as e:
+        # Surface errors cleanly
+        return {"answer": f"Sorry, I hit an error while checking Shopify: {e!s}"}
