@@ -1,5 +1,6 @@
 // app/page.tsx (Server Component)
 import Image from 'next/image'
+import ChatBox from './components/ChatBox'
 
 export const dynamic = 'force-dynamic'
 
@@ -76,6 +77,7 @@ export default async function HomePage() {
 					))}
 				</ul>
 			)}
+			<ChatBox />
 		</main>
 	)
 }
