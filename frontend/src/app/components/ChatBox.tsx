@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 type Role = 'user' | 'assistant'
 type Msg = { role: Role; content: string }
@@ -22,6 +22,14 @@ export default function ChatBox() {
 	const [msgs, setMsgs] = useState<Msg[]>([])
 	const [input, setInput] = useState('')
 	const [loading, setLoading] = useState(false)
+
+	useEffect(() => {
+		const s = localStorage.getItem('chat_msgs')
+		if (s) setMsgs(JSON.parse(s))
+	}, [])
+	useEffect(() => {
+		localStorage.setItem('chat_msgs', JSON.stringify(msgs))
+	}, [msgs])
 
 	async function onSend(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault()
