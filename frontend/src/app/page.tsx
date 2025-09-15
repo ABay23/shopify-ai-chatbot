@@ -1,6 +1,7 @@
 // app/page.tsx (Server Component)
 import Image from 'next/image'
-import ChatBox from './components/ChatBox'
+// import ChatBox from './components/ChatBox'
+import ChatDrawer from './components/ChatDrawer'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,9 +44,8 @@ export default async function HomePage() {
 	const { products } = await getProducts(12)
 
 	return (
-		<main className='p-6 space-y-6'>
+		<main className='mx-auto max-w-6xl p-6 space-y-6'>
 			<h1 className='text-2xl font-bold'>Shopify AI Chatbot</h1>
-
 			{products.length === 0 ? (
 				<div className='opacity-70'>No products yet.</div>
 			) : (
@@ -77,7 +77,7 @@ export default async function HomePage() {
 					))}
 				</ul>
 			)}
-			<ChatBox />
+			<ChatDrawer /> {/* floating button + right-side drawer */}
 		</main>
 	)
 }
